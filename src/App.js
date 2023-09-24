@@ -15,7 +15,7 @@ function App() {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ height: "100vh" }}>
       <Header style={{ color: "white", display: "flex", alignItems: "center" }}>
         <Title level={2} style={{ color: "white" }}>
           Journal
@@ -28,6 +28,7 @@ function App() {
             flexDirection: "column",
             alignItems: "center",
             width: "100%",
+            height: "100%",
           }}
         >
           <Router>

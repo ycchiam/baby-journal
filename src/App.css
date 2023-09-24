@@ -36,3 +36,24 @@
     transform: rotate(360deg);
   }
 }
+
+/* This affects the width of the scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* This affects the background of the track that the thumb moves within */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* This affects the actual 'thumb' or 'handle' of the scrollbar */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 12.5px;
+}
+
+/* The hover effect when you place your cursor over the thumb */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

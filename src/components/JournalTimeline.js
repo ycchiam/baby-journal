@@ -1,7 +1,8 @@
+import { EditOutlined } from "@ant-design/icons";
+import { Button, Timeline } from "antd";
+import dayjs from "dayjs";
 import React from "react";
-import { Timeline } from "antd";
 import { Link } from "react-router-dom";
-import { StarOutlined } from "@ant-design/icons";
 
 const JournalTimeline = ({ journals }) => {
   const timelineItems = journals.map((journal) => ({
@@ -15,6 +16,12 @@ const JournalTimeline = ({ journals }) => {
     ),
   }));
 
+  const newJournalButton = (
+    <Link to={`/points/${dayjs().format("YYYY-MM-DD")}`}>
+      <Button type="primary" shape="circle" icon={<EditOutlined />} />
+    </Link>
+  );
+
   return (
     <div
       style={{
@@ -27,10 +34,9 @@ const JournalTimeline = ({ journals }) => {
       <Timeline
         mode="alternate"
         pending={true}
-        pendingDot={<StarOutlined />}
+        pendingDot={newJournalButton}
         style={{ width: "100%" }}
         items={timelineItems}
-        reverse={true}
       />
     </div>
   );
