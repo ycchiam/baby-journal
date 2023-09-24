@@ -56,7 +56,7 @@ function PointList() {
         date: toFirestoreTimestamp(selectedDate),
       });
     }
-    setInputText(""); // Clear the input box after adding/updating
+    setInputText("");
   };
 
   const handleDelete = async () => {
@@ -72,23 +72,12 @@ function PointList() {
     setEditedPointId(point.id);
   };
 
-  // const startEditingPoint = (point) => {
-  //   setEditedPointId(point.id);
-  //   setEditedPointText(point.text);
-
-  //   // If there's a small delay in rendering, the focus might not work instantly.
-  //   // Hence, use a timeout to ensure the element is available to be focused on.
-  //   setTimeout(() => {
-  //     editTextAreaRef.current && editTextAreaRef.current.focus();
-  //   }, 0);
-  // };
-
   const cancelEditingPoint = (event) => {
     // Check if the related target is the submit button, if so, don't cancel the editing
-
     if (event.relatedTarget && event.relatedTarget.type === "button") {
       return;
     }
+
     setEditedPointId(null);
     setInputText("");
   };
@@ -118,7 +107,7 @@ function PointList() {
         renderItem={(point) => (
           <List.Item>
             <div
-              style={{ width: "100%", cursor: "pointer" }} // added cursor style for better UX
+              style={{ width: "100%", cursor: "pointer" }}
               onClick={() => handleClickListItem(point)}
             >
               {point.text}
@@ -162,7 +151,7 @@ function PointList() {
             style={{ paddingRight: "42px" }}
             placeholder={
               editedPointId ? "Edit point..." : "Enter a new point..."
-            } // Conditional placeholder
+            }
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onPressEnter={handleAddOrUpdatePoint}
