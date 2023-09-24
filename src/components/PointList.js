@@ -1,5 +1,5 @@
-import { CloseOutlined, SendOutlined } from "@ant-design/icons";
-import { Button, DatePicker, Input, List, Space } from "antd";
+import { CloseOutlined, DeleteOutlined, SendOutlined } from "@ant-design/icons";
+import { Button, DatePicker, Input, List, Popconfirm, message } from "antd";
 import dayjs from "dayjs";
 import {
   addDoc,
@@ -18,10 +18,10 @@ import { db, toFirestoreTimestamp } from "../firebase";
 function PointList() {
   const { TextArea } = Input;
   const { date } = useParams();
+
   const [points, setPoints] = useState([]);
-  const [newPointText, setNewPointText] = useState("");
   const [editedPointId, setEditedPointId] = useState(null);
-  const [editedPointText, setEditedPointText] = useState("");
+  const [inputText, setInputText] = useState("");
   const [selectedDate, setSelectedDate] = useState(dayjs(date));
 
   useEffect(() => {
@@ -31,36 +31,66 @@ function PointList() {
     );
 
     onSnapshot(q, (snapshot) => {
-      const fetchedPoints = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        text: doc.data().text,
-      }));
-      setPoints(fetchedPoints);
+      setPoints(
+        snapshot.docs.map((doc) => ({
+          id: doc.id,
+          text: doc.data().text,
+        }))
+      );
     });
   }, [selectedDate]);
 
-  const addPoint = async () => {
-    if (newPointText.trim() === "") return;
+  const handleAddOrUpdatePoint = async () => {
+    if (!inputText.trim()) return;
 
-    const pointsCollection = collection(db, "points");
-    await addDoc(pointsCollection, {
-      text: newPointText,
-      date: toFirestoreTimestamp(selectedDate),
-    });
-
-    setNewPointText("");
+    if (editedPointId) {
+      // Update existing point
+      await updateDoc(doc(db, "points", editedPointId), {
+        text: inputText,
+      });
+      setEditedPointId(null);
+    } else {
+      // Add a new point
+      await addDoc(collection(db, "points"), {
+        text: inputText,
+        date: toFirestoreTimestamp(selectedDate),
+      });
+    }
+    setInputText(""); // Clear the input box after adding/updating
   };
 
-  const updatePoint = async (id) => {
-    const pointRef = doc(db, "points", id);
-    await updateDoc(pointRef, { text: editedPointText });
-    setEditedPointId(null);
-    setEditedPointText("");
-  };
-
-  const deletePoint = async (id) => {
-    const pointRef = doc(db, "points", id);
+  const handleDelete = async () => {
+    const pointRef = doc(db, "points", editedPointId);
     await deleteDoc(pointRef);
+    message.success("Point deleted successfully!");
+    setEditedPointId(null);
+    setInputText("");
+  };
+
+  const handleClickListItem = (point) => {
+    setInputText(point.text);
+    setEditedPointId(point.id);
+  };
+
+  // const startEditingPoint = (point) => {
+  //   setEditedPointId(point.id);
+  //   setEditedPointText(point.text);
+
+  //   // If there's a small delay in rendering, the focus might not work instantly.
+  //   // Hence, use a timeout to ensure the element is available to be focused on.
+  //   setTimeout(() => {
+  //     editTextAreaRef.current && editTextAreaRef.current.focus();
+  //   }, 0);
+  // };
+
+  const cancelEditingPoint = (event) => {
+    // Check if the related target is the submit button, if so, don't cancel the editing
+
+    if (event.relatedTarget && event.relatedTarget.type === "button") {
+      return;
+    }
+    setEditedPointId(null);
+    setInputText("");
   };
 
   return (
@@ -73,112 +103,76 @@ function PointList() {
         flex: 1,
       }}
     >
+      {/* Date Picker */}
       <DatePicker
         allowClear={false}
         style={{ marginBottom: 16 }}
         defaultValue={selectedDate}
-        onChange={(date) => setSelectedDate(date)}
+        onChange={setSelectedDate}
       />
+
+      {/* Points List */}
       <List
         bordered
         dataSource={points}
-        renderItem={(point, index) => {
-          let style = {};
-          if (editedPointId === point.id) {
-            style = {
-              padding: 12,
-              backgroundColor: "white",
-            };
-
-            if (points.length === 1) {
-              style.borderRadius = "8px"; // All corners rounded for only item
-            } else if (index === 0) {
-              style.borderTopLeftRadius = "8px"; // Top-left corner rounded for first item
-              style.borderTopRightRadius = "8px"; // Top-right corner rounded for first item
-            } else if (index === points.length - 1) {
-              style.borderBottomLeftRadius = "8px"; // Bottom-left corner rounded for last item
-              style.borderBottomRightRadius = "8px"; // Bottom-right corner rounded for last item
-            }
-          }
-
-          return (
-            <List.Item style={style}>
-              {editedPointId === point.id ? (
-                <div style={{ flex: 1, position: "relative" }}>
-                  <TextArea
-                    bordered={false}
-                    paddingInline={40}
-                    className="custom-scrollbar"
-                    autoSize={{ minRows: 2, maxRows: 6 }}
-                    style={{ paddingRight: "42px" }}
-                    placeholder="Edit point..."
-                    value={editedPointText}
-                    onChange={(e) => setEditedPointText(e.target.value)}
-                    onPressEnter={() => updatePoint(point.id)}
-                  />
-                  <Space direction="vertical">
-                    <Space.Compact>
-                      <Button
-                        icon={<CloseOutlined />}
-                        style={{
-                          position: "absolute",
-                          bottom: "-28px",
-                          right: "44px",
-                        }}
-                        onClick={() => {
-                          setEditedPointId(null);
-                          setEditedPointText("");
-                        }}
-                      />
-                      <Button
-                        type="primary"
-                        icon={<SendOutlined />}
-                        style={{
-                          position: "absolute",
-                          bottom: "-28px",
-                          right: "10px",
-                        }}
-                        onClick={() => updatePoint(point.id)}
-                      />
-                    </Space.Compact>
-                  </Space>
-                </div>
-              ) : (
-                <div
-                  style={{ width: "100%" }}
-                  onClick={() => {
-                    setEditedPointId(point.id);
-                    setEditedPointText(point.text);
-                  }}
-                >
-                  {point.text}
-                </div>
-              )}
-            </List.Item>
-          );
-        }}
+        renderItem={(point) => (
+          <List.Item>
+            <div
+              style={{ width: "100%", cursor: "pointer" }} // added cursor style for better UX
+              onClick={() => handleClickListItem(point)}
+            >
+              {point.text}
+            </div>
+          </List.Item>
+        )}
       />
-      <div style={{ flex: 1 }}></div>
+
+      {/* Space filler to push the input box to bottom */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "end",
+          alignSelf: "flex-end",
+          gap: "8px",
+        }}
+      >
+        {(editedPointId || inputText) && (
+          <Button icon={<CloseOutlined />} onClick={cancelEditingPoint} />
+        )}
+        {editedPointId && (
+          <Popconfirm
+            title="Are you sure you want to delete this point?"
+            onConfirm={() => handleDelete()}
+            okText="Yes"
+            cancelText="No"
+            placement="topRight"
+          >
+            <Button danger type="primary" icon={<DeleteOutlined />} />
+          </Popconfirm>
+        )}
+      </div>
+
+      {/* Add New Point */}
       <div style={{ display: "flex", alignItems: "center", marginTop: 12 }}>
         <div style={{ flex: 1, position: "relative" }}>
           <TextArea
             className="custom-scrollbar"
             autoSize={{ minRows: 2, maxRows: 6 }}
-            style={{ paddingRight: "42px" }} // Space for the button
-            placeholder="Enter a new point..."
-            value={newPointText}
-            onChange={(e) => setNewPointText(e.target.value)}
-            onPressEnter={addPoint}
+            style={{ paddingRight: "42px" }}
+            placeholder={
+              editedPointId ? "Edit point..." : "Enter a new point..."
+            } // Conditional placeholder
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onPressEnter={handleAddOrUpdatePoint}
           />
+
           <Button
             type="primary"
             icon={<SendOutlined />}
-            style={{
-              position: "absolute", // Absolutely position the button
-              bottom: "10px", // Position it 10px from the bottom
-              right: "10px", // Position it 10px from the right
-            }}
-            onClick={addPoint}
+            style={{ position: "absolute", bottom: "10px", right: "10px" }}
+            onClick={handleAddOrUpdatePoint}
           />
         </div>
       </div>
