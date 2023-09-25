@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./App.css";
 import JournalTimeline from "./components/JournalTimeline";
 import PointList from "./components/PointList";
+import InstallButton from "./InstallButton";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -16,10 +17,18 @@ function App() {
 
   return (
     <Layout style={{ height: "100vh" }}>
-      <Header style={{ color: "white", display: "flex", alignItems: "center" }}>
+      <Header
+        style={{
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <Title level={2} style={{ color: "white" }}>
           Journal
         </Title>
+        <InstallButton />
       </Header>
       <Content style={{ padding: "20px 50px" }}>
         <div
@@ -33,14 +42,13 @@ function App() {
         >
           <Router>
             <Routes>
-              <Route path="/" element={<JournalTimeline journals={journals}/>} />
+              <Route
+                path="/"
+                element={<JournalTimeline journals={journals} />}
+              />
               <Route path="/points/:date" element={<PointList />} />
             </Routes>
           </Router>
-          {/* <Routes>
-              <Route path="/" element={<PointList />} />
-              <Route path="/journals" element={<JournalList />} />
-            </Routes> */}
         </div>
       </Content>
     </Layout>
