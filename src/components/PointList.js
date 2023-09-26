@@ -1,4 +1,10 @@
-import { CloseOutlined, DeleteOutlined, SendOutlined } from "@ant-design/icons";
+import {
+  CloseOutlined,
+  DeleteOutlined,
+  SendOutlined,
+  LeftOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
 import { Button, DatePicker, Input, List, Popconfirm, message } from "antd";
 import dayjs from "dayjs";
 import {
@@ -25,9 +31,10 @@ function PointList() {
   const [selectedDate, setSelectedDate] = useState(dayjs(date));
 
   useEffect(() => {
+    const formattedDate = selectedDate.format("YYYY-MM-DD");
     const q = query(
       collection(db, "points"),
-      where("date", "==", toFirestoreTimestamp(selectedDate))
+      where("date", "==", formattedDate)
     );
 
     onSnapshot(q, (snapshot) => {
@@ -43,17 +50,20 @@ function PointList() {
   const handleAddOrUpdatePoint = async () => {
     if (!inputText.trim()) return;
 
+    const formattedDate = selectedDate.format("YYYY-MM-DD");
+
     if (editedPointId) {
       // Update existing point
       await updateDoc(doc(db, "points", editedPointId), {
         text: inputText,
+        date: formattedDate,
       });
       setEditedPointId(null);
     } else {
       // Add a new point
       await addDoc(collection(db, "points"), {
         text: inputText,
-        date: toFirestoreTimestamp(selectedDate),
+        date: formattedDate,
       });
     }
     setInputText("");
@@ -82,6 +92,14 @@ function PointList() {
     setInputText("");
   };
 
+  const handlePrevDate = () => {
+    setSelectedDate(selectedDate.subtract(1, "day"));
+  };
+
+  const handleNextDate = () => {
+    setSelectedDate(selectedDate.add(1, "day"));
+  };
+
   return (
     <div
       style={{
@@ -93,12 +111,24 @@ function PointList() {
       }}
     >
       {/* Date Picker */}
-      <DatePicker
-        allowClear={false}
-        style={{ marginBottom: 16 }}
-        defaultValue={selectedDate}
-        onChange={setSelectedDate}
-      />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <Button icon={<LeftOutlined />} onClick={handlePrevDate}></Button>
+        <DatePicker
+          inputReadOnly={true}
+          allowClear={false}
+          style={{ margin: "0 8px", flexGrow: 1 }}
+          value={selectedDate}
+          onChange={setSelectedDate}
+        />
+        <Button icon={<RightOutlined />} onClick={handleNextDate}></Button>
+      </div>
 
       {/* Points List */}
       <List
