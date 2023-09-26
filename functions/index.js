@@ -1,52 +1,80 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-const { onRequest } = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
-
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
-
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const dayjs = require("dayjs");
+
 admin.initializeApp();
 
 exports.createQueueEntryOnPointChange = functions.firestore
   .document("points/{pointId}")
-  .onWrite(async (change, context) => {
-    // Get the current and previous value
-    const newValue = change.after.data();
-    const previousValue = change.before.data();
-
-    // Determine if it's a new point or an updated point
-    if (!previousValue && newValue) {
-      // This is a new point
-      // ... Add your logic for a new point here if needed ...
-    } else if (previousValue && newValue) {
-      // This is an updated point
-      // ... Add your logic for an updated point here if needed ...
+  .onWrite(async (change) => {
+    let dateString;
+    if (change.after.exists) {
+      dateString = change.after.data().date; // If it's an add or update
+    } else if (change.before.exists) {
+      dateString = change.before.data().date; // If it's a delete
     } else {
-      // This point was deleted
       return null;
     }
 
-    // Create the queue entry in /queue
-    const queueData = {
-      type: "daily", // Update this according to your business logic
-      dateStart: admin.firestore.Timestamp.now(), // Modify this according to your needs
-      dateEnd: admin.firestore.Timestamp.now(), // Modify this according to your needs
+    const date = dayjs(dateString);
+
+    // Daily
+    const dailyKey = `daily:${date.format("YYYY-MM-DD")}`;
+    const dailyData = {
+      type: "daily",
+      dateStart: date.format("YYYY-MM-DD"),
+      dateEnd: date.format("YYYY-MM-DD"),
     };
 
-    return admin.firestore().collection("queue").add(queueData);
+    // Weekly
+    const startOfWeek = date.startOf("week");
+    const endOfWeek = date.endOf("week");
+    const weeklyKey = `weekly:${startOfWeek.format(
+      "YYYY-MM-DD"
+    )}:${endOfWeek.format("YYYY-MM-DD")}`;
+    const weeklyData = {
+      type: "weekly",
+      dateStart: startOfWeek.format("YYYY-MM-DD"),
+      dateEnd: endOfWeek.format("YYYY-MM-DD"),
+    };
+
+    // Monthly
+    const startOfMonth = date.startOf("month");
+    const endOfMonth = date.endOf("month");
+    const monthlyKey = `monthly:${startOfMonth.format(
+      "YYYY-MM-DD"
+    )}:${endOfMonth.format("YYYY-MM-DD")}`;
+    const monthlyData = {
+      type: "monthly",
+      dateStart: startOfMonth.format("YYYY-MM-DD"),
+      dateEnd: endOfMonth.format("YYYY-MM-DD"),
+    };
+
+    // Yearly
+    const startOfYear = date.startOf("year");
+    const endOfYear = date.endOf("year");
+    const yearlyKey = `yearly:${startOfYear.format(
+      "YYYY-MM-DD"
+    )}:${endOfYear.format("YYYY-MM-DD")}`;
+    const yearlyData = {
+      type: "yearly",
+      dateStart: startOfYear.format("YYYY-MM-DD"),
+      dateEnd: endOfYear.format("YYYY-MM-DD"),
+    };
+
+    const db = admin.firestore();
+
+    // Write to Firestore
+    const batch = db.batch();
+    batch.set(db.collection("queue").doc(dailyKey), dailyData, { merge: true });
+    batch.set(db.collection("queue").doc(weeklyKey), weeklyData, {
+      merge: true,
+    });
+    batch.set(db.collection("queue").doc(monthlyKey), monthlyData, {
+      merge: true,
+    });
+    batch.set(db.collection("queue").doc(yearlyKey), yearlyData, {
+      merge: true,
+    });
+    return batch.commit();
   });
