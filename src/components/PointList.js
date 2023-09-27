@@ -1,9 +1,9 @@
 import {
   CloseOutlined,
   DeleteOutlined,
-  SendOutlined,
   LeftOutlined,
   RightOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
 import { Button, DatePicker, Input, List, Popconfirm, message } from "antd";
 import dayjs from "dayjs";
@@ -19,7 +19,7 @@ import {
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { db, toFirestoreTimestamp } from "../firebase";
+import { db } from "../firebase";
 
 function PointList() {
   const { TextArea } = Input;
