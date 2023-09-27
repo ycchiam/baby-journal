@@ -21,11 +21,3 @@ const app = initializeApp(firebaseConfig);
 // const analytics = getAnalytics(app);
 
 export const db = getFirestore(app);
-
-export const toFirestoreTimestamp = (timestamp) => {
-  if (timestamp instanceof dayjs) {
-    return Timestamp.fromDate(new Date(timestamp.format("YYYY-MM-DD")));
-  } else if (timestamp instanceof String) {
-    return Timestamp.fromDate(new Date(timestamp));
-  }
-};
