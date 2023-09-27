@@ -3,6 +3,7 @@ import { Button, Timeline } from "antd";
 import dayjs from "dayjs";
 import React from "react";
 import { Link } from "react-router-dom";
+import GenerateDiaryButton from "./GenerateDiaryButton";
 
 const JournalTimeline = ({ journals }) => {
   const timelineItems = journals.map((journal) => ({
@@ -38,6 +39,7 @@ const JournalTimeline = ({ journals }) => {
         style={{ width: "100%" }}
         items={timelineItems}
       />
+      <GenerateDiaryButton />
     </div>
   );
 };
