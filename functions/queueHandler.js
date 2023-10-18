@@ -2,10 +2,12 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const dayjs = require("dayjs");
 
-admin.initializeApp();
+if (admin.apps.length === 0) {
+  admin.initializeApp(functions.config().firebase);
+}
 
-exports.createQueueEntryOnPointChange = functions.firestore
-  .document("points/{pointId}")
+exports.createQueueEntryOnJournalChange = functions.firestore
+  .document("journals/{journalId}")
   .onWrite(async (change) => {
     let dateString;
     if (change.after.exists) {
@@ -19,7 +21,9 @@ exports.createQueueEntryOnPointChange = functions.firestore
     const date = dayjs(dateString);
 
     // Daily
-    const dailyKey = `daily:${date.format("YYYY-MM-DD")}`;
+    const dailyKey = `daily:${date.format("YYYY-MM-DD")}:${date.format(
+      "YYYY-MM-DD"
+    )}`;
     const dailyData = {
       type: "daily",
       dateStart: date.format("YYYY-MM-DD"),

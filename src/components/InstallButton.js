@@ -37,7 +37,7 @@ function InstallButton() {
             marginBottom: 20,
           }}
           icon={<DownloadOutlined />}
-        ></Button>
+        >Install</Button>
       )}
     </div>
   );

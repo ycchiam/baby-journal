@@ -57,3 +57,26 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+.truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
+}
+
+.timeline-container::-webkit-scrollbar {
+  display: none;
+}
+
+.fade-button {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  pointer-events: none; /* so it doesn't interfere when not visible */
+}
+
+.fade-button.visible {
+  opacity: 1;
+  pointer-events: auto; /* restore pointer events when visible */
+}
